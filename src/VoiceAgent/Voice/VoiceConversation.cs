@@ -38,8 +38,8 @@ public sealed class VoiceConversation : IDisposable
         };
 
         // Warm everything up
-        using (var connection = Connection.FromSpeechSynthesizer(_synthesizer)) connection.Open(true);
-        using (var connection = Connection.FromRecognizer(_recognizer)) connection.Open(true);
+        // using (var connection = Connection.FromSpeechSynthesizer(_synthesizer)) connection.Open(true);
+        // using (var connection = Connection.FromRecognizer(_recognizer)) connection.Open(true);
     }
 
     public async Task RunConversationAsync(CancellationToken cancellationToken)
