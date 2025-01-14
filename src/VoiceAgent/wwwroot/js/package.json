@@ -1,0 +1,19 @@
+{
+    "name": "voiceagent",
+    "version": "1.0.0",
+    "description": "",
+    "main": "application.js",
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@azure/communication-calling": "^1.30.4",
+        "@azure/communication-common": "^2.3.1"
+    },
+    "devDependencies": {
+        "copy-webpack-plugin": "^11.0.0",
+        "webpack": "^5.88.2",
+        "webpack-cli": "^5.1.4",
+        "webpack-dev-server": "^4.15.1"
+    }
+}
