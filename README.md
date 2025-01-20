@@ -58,7 +58,7 @@ The following values are required:
 ## ACS Frontend - Rebuilding the Frontend
 If you make changes to the wwwroot folder in ACSFrontend you may need to recompile the javascript used for ACS calling. To do this:
  - Install NodeJS
- - cd into the wwwroot folder
+ - cd into the `wwwroot/js` folder
  - Run `npm install`
  - Run `npx webpack build`
 This should compile any changes made within `application.js` and bundle the ACS call client into `app.compiled.js`.
