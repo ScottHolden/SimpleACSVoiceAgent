@@ -15,9 +15,9 @@ public record Config(
         {
             return websiteHostname;
         }
-        if (!string.IsNullOrWhiteSpace(WebsocketHostname) && Uri.TryCreate(WebsocketHostname, UriKind.RelativeOrAbsolute, out var hostUri))
+        if (!string.IsNullOrWhiteSpace(WebsocketHostname))
         {
-            return hostUri.Host;
+            return WebsocketHostname.Replace("https://", "", StringComparison.OrdinalIgnoreCase).Replace("http://", "", StringComparison.OrdinalIgnoreCase).Trim('/');
         }
         throw new InvalidOperationException("Hostname not set");
     }
