@@ -2,7 +2,7 @@ using Azure.Communication;
 using Azure.Communication.CallAutomation;
 using Azure.Communication.Identity;
 
-namespace VoiceAgent;
+namespace ACSFrontend;
 
 public record IdentityResponse(string AccessToken, string UserRawId);
 
@@ -49,13 +49,5 @@ public class CallHandler(
             _logger.LogError(e, "Error making call to {UserObjectId}", rawId);
             throw;
         }
-    }
-
-    public async Task LogAsync(HttpContext context)
-    {
-        using StreamReader bodyReader = new(context.Request.Body);
-        var body = await bodyReader.ReadToEndAsync();
-        _logger.LogInformation("Event Log: {Log}", body);
-        context.Response.StatusCode = StatusCodes.Status200OK;
     }
 }

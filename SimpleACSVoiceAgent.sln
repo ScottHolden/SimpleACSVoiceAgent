@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoiceAgent", "src\VoiceAgen
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevConsole", "src\DevConsole\DevConsole.csproj", "{A146FF8D-F336-4A07-A7A4-24C4A44D864E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ACSFrontend", "src\ACSFrontend\ACSFrontend.csproj", "{7CE64A75-E926-4E1A-AEE0-3BB9F04B91FD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,9 +28,14 @@ Global
 		{A146FF8D-F336-4A07-A7A4-24C4A44D864E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A146FF8D-F336-4A07-A7A4-24C4A44D864E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A146FF8D-F336-4A07-A7A4-24C4A44D864E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7CE64A75-E926-4E1A-AEE0-3BB9F04B91FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CE64A75-E926-4E1A-AEE0-3BB9F04B91FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CE64A75-E926-4E1A-AEE0-3BB9F04B91FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CE64A75-E926-4E1A-AEE0-3BB9F04B91FD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{518A6055-CBE0-4BCE-9307-E734652E9090} = {88392FF0-0E9E-486D-B8F2-33CB87648E76}
 		{A146FF8D-F336-4A07-A7A4-24C4A44D864E} = {88392FF0-0E9E-486D-B8F2-33CB87648E76}
+		{7CE64A75-E926-4E1A-AEE0-3BB9F04B91FD} = {88392FF0-0E9E-486D-B8F2-33CB87648E76}
 	EndGlobalSection
 EndGlobal
