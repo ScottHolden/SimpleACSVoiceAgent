@@ -1,8 +1,5 @@
 using Azure.AI.OpenAI;
-using Azure.Communication.CallAutomation;
-using Azure.Communication.Identity;
 using Azure.Core;
-using Microsoft.AspNetCore.Mvc;
 using OpenAI.Chat;
 using VoiceAgent;
 
@@ -15,25 +12,13 @@ builder.Services.AddTransient(context
 );
 
 // Internal services
-builder.Services.AddSingleton<Agent>();
+builder.Services.AddSingleton<IAgent, AoaiAgent>();
+
 builder.Services.AddSingleton<Voice>();
-builder.Services.AddSingleton<CallHandler>();
 builder.Services.AddSingleton<WebsocketHandler>();
 
 // Dependencies
 builder.Services.AddAzureTokenCredential();
-builder.Services.AddSingleton<CallAutomationClient>(services =>
-{
-    var endpoint = services.GetRequiredService<Config>().ACSEndpoint;
-    var credential = services.GetRequiredService<TokenCredential>();
-    return new CallAutomationClient(endpoint, credential);
-});
-builder.Services.AddSingleton<CommunicationIdentityClient>(services =>
-{
-    var endpoint = services.GetRequiredService<Config>().ACSEndpoint;
-    var credential = services.GetRequiredService<TokenCredential>();
-    return new CommunicationIdentityClient(endpoint, credential);
-});
 builder.Services.AddSingleton<ChatClient>(services => {
     var config = services.GetRequiredService<Config>();
     var credential = services.GetRequiredService<TokenCredential>();
@@ -44,30 +29,22 @@ builder.Services.AddSingleton<ChatClient>(services => {
 // Build
 var app = builder.Build();
 app.UseWebSockets();
-app.UseDefaultFiles();
-app.UseStaticFiles(); // Only used to present a sample frontend for end-to-end ACS
 
-// Map our APIs
-app.MapPost("/api/identity", async (CallHandler handler) 
-    => await handler.GetIdentityAsync()
-);
-app.MapPost("/api/call", async ([FromBody] CallRequest request, CallHandler handler) =>
-{
-    await handler.MakeCallAsync(request.RawId);
-    return Results.Accepted();
-});
-app.Map("/api/events", async (HttpContext context, CallHandler handler) 
-    => await handler.LogAsync(context)
-);
-
+// Map our websocket endpoint
 app.Map("/api/audio", async (HttpContext context, WebsocketHandler handler)
     => await handler.Handle(context)
 );
 
+// Map a logging endpoint for optional use with ACS
+app.Map("/api/events", async (HttpContext context, ILogger logger) => {
+    using StreamReader bodyReader = new(context.Request.Body);
+    var body = await bodyReader.ReadToEndAsync();
+    logger.LogInformation("Event Log: {Log}", body);
+    context.Response.StatusCode = StatusCodes.Status200OK;
+});
+
 // Warmup time!
-await app.Services.GetRequiredService<Voice>().WarmupAsync();
-await app.Services.GetRequiredService<Agent>().WarmupAsync();
+_ = app.Services.GetRequiredService<Voice>().WarmupAsync();
+_ = app.Services.GetService<AoaiAgent>()?.WarmupAsync();
 
 app.Run();
-
-record CallRequest(string RawId);

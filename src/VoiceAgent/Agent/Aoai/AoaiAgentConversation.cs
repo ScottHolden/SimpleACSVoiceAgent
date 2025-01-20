@@ -4,10 +4,10 @@ using OpenAI.Chat;
 
 namespace VoiceAgent;
 
-public class AgentConversation(
+public class AoaiAgentConversation(
     string _prompt,
     ChatClient _chatClient
-)
+) : IAgentConversation
 {
     private readonly List<ChatMessage> _messages = [
         ChatMessage.CreateSystemMessage(_prompt)

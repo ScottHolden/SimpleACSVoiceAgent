@@ -8,14 +8,14 @@ namespace VoiceAgent;
 
 public sealed class VoiceConversation : IDisposable
 {
-    private readonly AgentConversation _conversation;
+    private readonly IAgentConversation _conversation;
     private readonly WebSocket _ws;
     private readonly SpeechSynthesizer _synthesizer;
     private readonly PushAudioInputStream _inputStream;
     private readonly SpeechRecognizer _recognizer;
     private readonly ILogger _logger;
 
-    public VoiceConversation(AgentConversation conversation, WebSocket ws, SpeechConfig ttsConfig, SpeechConfig sttConfig, ILogger logger)
+    public VoiceConversation(IAgentConversation conversation, WebSocket ws, SpeechConfig ttsConfig, SpeechConfig sttConfig, ILogger logger)
     {
         _logger = logger;
         _conversation = conversation;

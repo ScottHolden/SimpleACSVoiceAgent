@@ -5,7 +5,7 @@ using Microsoft.CognitiveServices.Speech;
 namespace VoiceAgent;
 
 public class Voice(
-    Agent _agent,
+    IAgent _agent,
     Config _config,
     TokenCredential _tokenCredential,
     ILogger<Voice> _logger
