@@ -1,0 +1,278 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "languageVersion": "2.0",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.32.4.45862",
+      "templateHash": "11291179947384623746"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
+    "acsDataLocation": {
+      "type": "string",
+      "defaultValue": "Australia",
+      "metadata": {
+        "description": "The location of the data for the Communication Services resource."
+      }
+    },
+    "prefix": {
+      "type": "string",
+      "defaultValue": "demo",
+      "metadata": {
+        "description": "A prefix to add to the start of all resource names. Note: A \"unique\" suffix will also be added"
+      }
+    },
+    "principalId": {
+      "type": "string",
+      "metadata": {
+        "description": "The principal ID to assign the roles to (developer), if left empty or set to \"none\" no role assignments will be created. This is the object id of the user or service principal."
+      }
+    },
+    "principalType": {
+      "type": "string",
+      "allowedValues": [
+        "ServicePrincipal",
+        "User"
+      ],
+      "defaultValue": "User"
+    },
+    "tags": {
+      "type": "object",
+      "defaultValue": {}
+    }
+  },
+  "variables": {
+    "uniqueNameFormat": "[format('{0}-{{0}}-{1}', parameters('prefix'), uniqueString(resourceGroup().id, parameters('prefix')))]",
+    "uniqueShortNameFormat": "[toLower(format('{0}{{0}}{1}', parameters('prefix'), uniqueString(resourceGroup().id, parameters('prefix'))))]",
+    "usePrincipalId": "[and(not(empty(trim(parameters('principalId')))), not(equals(toLower(trim(parameters('principalId'))), 'none')))]"
+  },
+  "resources": {
+    "aoai::gpt4o": {
+      "type": "Microsoft.CognitiveServices/accounts/deployments",
+      "apiVersion": "2023-10-01-preview",
+      "name": "[format('{0}/{1}', format(variables('uniqueNameFormat'), 'aoai'), 'gpt-4o')]",
+      "sku": {
+        "name": "GlobalStandard",
+        "capacity": 50
+      },
+      "properties": {
+        "model": {
+          "format": "OpenAI",
+          "name": "gpt-4o",
+          "version": "2024-08-06"
+        },
+        "versionUpgradeOption": "NoAutoUpgrade"
+      },
+      "dependsOn": [
+        "aoai"
+      ]
+    },
+    "logAnalytics": {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2023-09-01",
+      "name": "[format(variables('uniqueNameFormat'), 'logs')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "retentionInDays": 30,
+        "sku": {
+          "name": "PerGB2018"
+        }
+      }
+    },
+    "acs": {
+      "type": "Microsoft.Communication/communicationServices",
+      "apiVersion": "2023-06-01-preview",
+      "name": "[format(variables('uniqueNameFormat'), 'acs')]",
+      "location": "global",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "dataLocation": "[parameters('acsDataLocation')]"
+      }
+    },
+    "acsLogs": {
+      "type": "Microsoft.Insights/diagnosticSettings",
+      "apiVersion": "2021-05-01-preview",
+      "scope": "[format('Microsoft.Communication/communicationServices/{0}', format(variables('uniqueNameFormat'), 'acs'))]",
+      "name": "allLogsToLogAnalytics",
+      "properties": {
+        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', format(variables('uniqueNameFormat'), 'logs'))]",
+        "logs": [
+          {
+            "categoryGroup": "allLogs",
+            "enabled": true
+          }
+        ]
+      },
+      "dependsOn": [
+        "acs",
+        "logAnalytics"
+      ]
+    },
+    "acsOwnerRole": {
+      "existing": true,
+      "type": "Microsoft.Authorization/roleDefinitions",
+      "apiVersion": "2022-05-01-preview",
+      "subscriptionId": "[subscription().subscriptionId]",
+      "name": "09976791-48a7-449e-bb21-39d1a415f350"
+    },
+    "acsOwnerRoleAssignment": {
+      "condition": "[variables('usePrincipalId')]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.Communication/communicationServices/{0}', format(variables('uniqueNameFormat'), 'acs'))]",
+      "name": "[guid(resourceId('Microsoft.Communication/communicationServices', format(variables('uniqueNameFormat'), 'acs')), subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '09976791-48a7-449e-bb21-39d1a415f350'), parameters('principalId'))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '09976791-48a7-449e-bb21-39d1a415f350')]",
+        "principalId": "[parameters('principalId')]",
+        "principalType": "[parameters('principalType')]"
+      },
+      "dependsOn": [
+        "acs"
+      ]
+    },
+    "aiSpeech": {
+      "type": "Microsoft.CognitiveServices/accounts",
+      "apiVersion": "2024-10-01",
+      "name": "[format(variables('uniqueNameFormat'), 'aispeech')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "kind": "SpeechServices",
+      "sku": {
+        "name": "S0"
+      },
+      "properties": {
+        "customSubDomainName": "[format(variables('uniqueShortNameFormat'), 'aispeech')]",
+        "disableLocalAuth": "[variables('usePrincipalId')]"
+      }
+    },
+    "aiSpeechLogs": {
+      "type": "Microsoft.Insights/diagnosticSettings",
+      "apiVersion": "2021-05-01-preview",
+      "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', format(variables('uniqueNameFormat'), 'aispeech'))]",
+      "name": "allLogsToLogAnalytics",
+      "properties": {
+        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', format(variables('uniqueNameFormat'), 'logs'))]",
+        "logs": [
+          {
+            "categoryGroup": "allLogs",
+            "enabled": true
+          }
+        ]
+      },
+      "dependsOn": [
+        "aiSpeech",
+        "logAnalytics"
+      ]
+    },
+    "aiSpeechUserRole": {
+      "existing": true,
+      "type": "Microsoft.Authorization/roleDefinitions",
+      "apiVersion": "2022-05-01-preview",
+      "subscriptionId": "[subscription().subscriptionId]",
+      "name": "f2dc8367-1007-4938-bd23-fe263f013447"
+    },
+    "aiSpeechRoleAssignment": {
+      "condition": "[variables('usePrincipalId')]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', format(variables('uniqueNameFormat'), 'aispeech'))]",
+      "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', format(variables('uniqueNameFormat'), 'aispeech')), subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f2dc8367-1007-4938-bd23-fe263f013447'), parameters('principalId'))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f2dc8367-1007-4938-bd23-fe263f013447')]",
+        "principalId": "[parameters('principalId')]",
+        "principalType": "[parameters('principalType')]"
+      },
+      "dependsOn": [
+        "aiSpeech"
+      ]
+    },
+    "aoai": {
+      "type": "Microsoft.CognitiveServices/accounts",
+      "apiVersion": "2024-10-01",
+      "name": "[format(variables('uniqueNameFormat'), 'aoai')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "kind": "OpenAI",
+      "sku": {
+        "name": "S0"
+      },
+      "properties": {
+        "customSubDomainName": "[format(variables('uniqueNameFormat'), 'aoai')]",
+        "disableLocalAuth": "[variables('usePrincipalId')]"
+      }
+    },
+    "aoaiLogs": {
+      "type": "Microsoft.Insights/diagnosticSettings",
+      "apiVersion": "2021-05-01-preview",
+      "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', format(variables('uniqueNameFormat'), 'aoai'))]",
+      "name": "allLogsToLogAnalytics",
+      "properties": {
+        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', format(variables('uniqueNameFormat'), 'logs'))]",
+        "logs": [
+          {
+            "categoryGroup": "allLogs",
+            "enabled": true
+          }
+        ]
+      },
+      "dependsOn": [
+        "aoai",
+        "logAnalytics"
+      ]
+    },
+    "aoaiUserRole": {
+      "existing": true,
+      "type": "Microsoft.Authorization/roleDefinitions",
+      "apiVersion": "2022-05-01-preview",
+      "subscriptionId": "[subscription().subscriptionId]",
+      "name": "5e0bd9bd-7b93-4f28-af87-19fc36ad61bd"
+    },
+    "aoaiUserRoleAssignment": {
+      "condition": "[variables('usePrincipalId')]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', format(variables('uniqueNameFormat'), 'aoai'))]",
+      "name": "[guid(subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'), subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f2dc8367-1007-4938-bd23-fe263f013447'), parameters('principalId'))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')]",
+        "principalId": "[parameters('principalId')]",
+        "principalType": "[parameters('principalType')]"
+      },
+      "dependsOn": [
+        "aoai"
+      ]
+    }
+  },
+  "outputs": {
+    "ACSEndpoint": {
+      "type": "string",
+      "value": "[reference('acs').hostName]"
+    },
+    "AISpeechResourceID": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.CognitiveServices/accounts', format(variables('uniqueNameFormat'), 'aispeech'))]"
+    },
+    "AISpeechRegion": {
+      "type": "string",
+      "value": "[reference('aiSpeech', '2024-10-01', 'full').location]"
+    },
+    "AOAIEndpoint": {
+      "type": "string",
+      "value": "[reference('aoai').endpoint]"
+    },
+    "AOAIModelDeployment": {
+      "type": "string",
+      "value": "gpt-4o"
+    }
+  }
+}

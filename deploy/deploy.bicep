@@ -7,13 +7,14 @@ param acsDataLocation string = 'Australia'
 @description('A prefix to add to the start of all resource names. Note: A "unique" suffix will also be added')
 param prefix string = 'demo'
 
+@description('The principal ID to assign the roles to (developer), if left empty or set to "none" no role assignments will be created. This is the object id of the user or service principal.')
 param principalId string
 param principalType ('User' | 'ServicePrincipal') = 'User'
 param tags object = {}
 
 var uniqueNameFormat = '${prefix}-{0}-${uniqueString(resourceGroup().id, prefix)}'
 var uniqueShortNameFormat = toLower('${prefix}{0}${uniqueString(resourceGroup().id, prefix)}')
-
+var usePrincipalId = !empty(trim(principalId)) && toLower(trim(principalId)) != 'none'
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: format(uniqueNameFormat, 'logs')
@@ -56,7 +57,7 @@ resource acsOwnerRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-previe
   name: '09976791-48a7-449e-bb21-39d1a415f350'
 }
 
-resource acsOwnerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource acsOwnerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (usePrincipalId) {
   name: guid(acs.id, acsOwnerRole.id, principalId)
   scope: acs
   properties: {
@@ -76,7 +77,7 @@ resource aiSpeech 'Microsoft.CognitiveServices/accounts@2024-10-01' = {
   }
   properties: {
     customSubDomainName: format(uniqueShortNameFormat, 'aispeech')
-    disableLocalAuth: true
+    disableLocalAuth: usePrincipalId
   }
 }
 
@@ -100,7 +101,7 @@ resource aiSpeechUserRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-pr
   name: 'f2dc8367-1007-4938-bd23-fe263f013447'
 }
 
-resource aiSpeechRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource aiSpeechRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (usePrincipalId) {
   name: guid(aiSpeech.id, aiSpeechUserRole.id, principalId)
   scope: aiSpeech
   properties: {
@@ -120,7 +121,7 @@ resource aoai 'Microsoft.CognitiveServices/accounts@2024-10-01' = {
   }
   properties: {
     customSubDomainName: format(uniqueNameFormat, 'aoai')
-    disableLocalAuth: true
+    disableLocalAuth: usePrincipalId
   }
   resource gpt4o 'deployments@2023-10-01-preview' = {
     name: 'gpt-4o'
@@ -158,7 +159,7 @@ resource aoaiUserRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-previe
   scope: subscription()
 }
 
-resource aoaiUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource aoaiUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (usePrincipalId) {
   name: guid(aoaiUserRole.id, aiSpeechUserRole.id, principalId)
   scope: aoai
   properties: {
@@ -167,3 +168,9 @@ resource aoaiUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04
     principalType: principalType
   }
 }
+
+output ACSEndpoint string = acs.properties.hostName
+output AISpeechResourceID string = aiSpeech.id
+output AISpeechRegion string = aiSpeech.location
+output AOAIEndpoint string = aoai.properties.endpoint
+output AOAIModelDeployment string = aoai::gpt4o.name
