@@ -1,6 +1,8 @@
 # Simple ACS Voice Agent
 A small code sample using ACS for a Voice Agent chat
 
+[![Deploy To Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FScottHolden%2FSimpleACSVoiceAgent%2Fmain%2Fdeploy%2Fdeploy.generated.json)
+
 ## Prerequisites
  - An Azure Speech resource
  - An Azure OpenAI resource with GPT-4o deployed (**required if using the example AoaiAgent**)
