@@ -44,8 +44,11 @@ public sealed class VoiceConversation : IDisposable
 
     public async Task RunConversationAsync(CancellationToken cancellationToken)
     {
-        // Send a welcome message
-        await SendOneShotSpeechAsync("Hi there. How can I help you today?");
+        // Send a welcome message - option 1, just sending a fixed message
+        // await SendOneShotSpeechAsync("Hi there. How can I help you today?");
+
+        // Option 2, trigger via the agent in the background
+        _ = SpeechRecognized("Hi");
 
         // Start recognizing and start the receive loop
         await _recognizer.StartContinuousRecognitionAsync();
