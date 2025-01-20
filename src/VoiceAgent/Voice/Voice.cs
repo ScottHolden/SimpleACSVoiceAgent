@@ -28,9 +28,22 @@ public class Voice(
 
     private async Task<SpeechConfig> BuildSTTConfigAsync(CancellationToken cancellationToken)
     {
-        var authToken = await GetAuthTokenAsync(cancellationToken);
         var region = _config.AISpeechRegion.Trim().ToLower().Replace(" ", "");
-        var config = SpeechConfig.FromAuthorizationToken(authToken, region);
+        SpeechConfig config;
+
+        if (string.IsNullOrWhiteSpace(_config.AISpeechKey))
+        {
+            _logger.LogInformation("Using managed identity for STT");
+
+            var authToken = await GetAuthTokenAsync(cancellationToken);
+            config = SpeechConfig.FromAuthorizationToken(authToken, region);
+        }
+        else
+        {
+            _logger.LogInformation("Using key auth for STT");
+
+            config = SpeechConfig.FromSubscription(_config.AISpeechKey, region);
+        }
 
         // Configure semantic segmentation to reduce pauses
         config.SetProperty(PropertyId.Speech_SegmentationStrategy, "Semantic");
@@ -43,13 +56,24 @@ public class Voice(
 
     private async Task<SpeechConfig> BuildTTSConfigAsync(CancellationToken cancellationToken)
     {
-        var authToken = await GetAuthTokenAsync(cancellationToken);
-
         // Use the v2 endpoint for textstream support
         var region = _config.AISpeechRegion.Trim().ToLower().Replace(" ", "");
         var endpoint = new Uri($"wss://{region}.tts.speech.microsoft.com/cognitiveservices/websocket/v2");
-        var config = SpeechConfig.FromEndpoint(endpoint);
-        config.AuthorizationToken = authToken;
+        SpeechConfig config;
+
+        if (string.IsNullOrWhiteSpace(_config.AISpeechKey))
+        {
+            _logger.LogInformation("Using managed identity for TTS");
+
+            config = SpeechConfig.FromEndpoint(endpoint);
+            config.AuthorizationToken = await GetAuthTokenAsync(cancellationToken);
+        }
+        else
+        {
+            _logger.LogInformation("Using key auth for TTS");
+
+            config = SpeechConfig.FromEndpoint(endpoint, _config.AISpeechKey);
+        }
 
         // Configure the voice
         config.SpeechSynthesisLanguage = _config.SpeechSynthesisLanguage;
@@ -62,7 +86,7 @@ public class Voice(
 
     private readonly SemaphoreSlim _authLock = new(1);
     private string? _authToken;
-    private DateTimeOffset _authTokenExpires = DateTimeOffset.MinValue; 
+    private DateTimeOffset _authTokenExpires = DateTimeOffset.MinValue;
     private async Task<string> GetAuthTokenAsync(CancellationToken cancellationToken)
     {
         if (_authToken != null && DateTimeOffset.Now < _authTokenExpires)
@@ -93,7 +117,7 @@ public class Voice(
         {
             _authLock.Release();
         }
-        
+
         return _authToken ?? throw new InvalidOperationException("Failed to get auth token");
     }
 }

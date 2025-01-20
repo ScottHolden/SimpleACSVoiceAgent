@@ -9,7 +9,9 @@ public record Config(
     string AOAIModelDeployment,
     string SpeechRecognitionLanguage,
     string SpeechSynthesisLanguage,
-    string SpeechSynthesisVoiceName
+    string SpeechSynthesisVoiceName,
+    string? AOAIKey = null,
+    string? AISpeechKey = null
 ){
     public GlobalAudioFormat GlobalAudioFormat = GlobalAudioFormat.Pcm16KMono16Bit;
     public SpeechSynthesisOutputFormat AISpeechAudioFormat => GlobalAudioFormat switch
