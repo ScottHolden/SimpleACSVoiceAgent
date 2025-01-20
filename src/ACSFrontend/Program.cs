@@ -1,4 +1,5 @@
 using ACSFrontend;
+using Azure;
 using Azure.Communication.CallAutomation;
 using Azure.Communication.Identity;
 using Azure.Core;
@@ -19,15 +20,41 @@ builder.Services.AddSingleton<CallHandler>();
 builder.Services.AddAzureTokenCredential();
 builder.Services.AddSingleton<CallAutomationClient>(services =>
 {
-    var endpoint = services.GetRequiredService<Config>().ACSEndpoint;
-    var credential = services.GetRequiredService<TokenCredential>();
-    return new CallAutomationClient(endpoint, credential);
+    var logger = services.GetRequiredService<ILogger<CallAutomationClient>>();
+    var config = services.GetRequiredService<Config>();
+    if (string.IsNullOrWhiteSpace(config.ACSKey))
+    {
+        var credential = services.GetRequiredService<TokenCredential>();
+
+        logger.LogInformation("Using managed identity for CallAutomationClient");
+
+        return new CallAutomationClient(config.ACSEndpoint, credential);
+    }
+    else
+    {
+        logger.LogInformation("Using key auth for CallAutomationClient");
+
+        return new CallAutomationClient($"endpoint={config.ACSEndpoint};accesskey={config.ACSKey}");
+    }
 });
 builder.Services.AddSingleton<CommunicationIdentityClient>(services =>
 {
-    var endpoint = services.GetRequiredService<Config>().ACSEndpoint;
-    var credential = services.GetRequiredService<TokenCredential>();
-    return new CommunicationIdentityClient(endpoint, credential);
+    var logger = services.GetRequiredService<ILogger<CommunicationIdentityClient>>();
+    var config = services.GetRequiredService<Config>();
+    if (string.IsNullOrWhiteSpace(config.ACSKey))
+    {
+        var credential = services.GetRequiredService<TokenCredential>();
+
+        logger.LogInformation("Using managed identity for CallAutomationClient");
+
+        return new CommunicationIdentityClient(config.ACSEndpoint, credential);
+    }
+    else
+    {
+        logger.LogInformation("Using key auth for CallAutomationClient");
+
+        return new CommunicationIdentityClient(config.ACSEndpoint, new AzureKeyCredential(config.ACSKey));
+    }
 });
 
 // Build

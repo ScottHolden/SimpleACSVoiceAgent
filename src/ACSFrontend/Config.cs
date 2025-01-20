@@ -3,8 +3,9 @@ using Azure.Communication.CallAutomation;
 namespace ACSFrontend;
 
 public record Config(
+    string? WebsocketHostname,
     Uri ACSEndpoint,
-    string? WebsocketHostname
+    string? ACSKey = null
 ){
     public Uri BaseUri => new($"https://{GetHost()}");
     public Uri BaseWsUri => new($"wss://{GetHost()}");
