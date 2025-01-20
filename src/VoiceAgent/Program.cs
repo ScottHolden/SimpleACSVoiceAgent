@@ -1,6 +1,7 @@
 using Azure;
 using Azure.AI.OpenAI;
 using Azure.Core;
+using Microsoft.AspNetCore.Mvc;
 using OpenAI.Chat;
 using VoiceAgent;
 
@@ -52,7 +53,7 @@ app.Map("/api/audio", async (HttpContext context, WebsocketHandler handler)
 );
 
 // Map a logging endpoint for optional use with ACS
-app.Map("/api/events", async (HttpContext context, ILogger logger) =>
+app.Map("/api/events", async (HttpContext context, [FromServices]ILogger<Program> logger) =>
 {
     using StreamReader bodyReader = new(context.Request.Body);
     var body = await bodyReader.ReadToEndAsync();
