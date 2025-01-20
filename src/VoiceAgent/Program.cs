@@ -51,6 +51,8 @@ builder.Services.AddSingleton<ChatClient>(services =>
 // Build
 var app = builder.Build();
 app.UseWebSockets();
+app.UseDefaultFiles();
+app.UseStaticFiles(); // Only used for the dev web frontend
 
 // Map our websocket endpoint
 app.Map("/api/audio", async (HttpContext context, WebsocketHandler handler)
