@@ -1,5 +1,5 @@
 # Simple Voice Agent
-A small code sample using for a Voice Agent chat
+A small code sample showing how to run a Voice Agent
 
 [![Deploy To Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FScottHolden%2FSimpleACSVoiceAgent%2Fmain%2Fdeploy%2Fdeploy.generated.json)
 
