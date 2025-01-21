@@ -68,8 +68,23 @@ app.Map("/api/events", async (HttpContext context, [FromServices]ILogger<Program
     context.Response.StatusCode = StatusCodes.Status200OK;
 });
 
-// Warmup time!
-_ = app.Services.GetRequiredService<Voice>().WarmupAsync();
-_ = app.Services.GetService<IAgent>()?.WarmupAsync();
+// Warmup time and keep warm
+_ = KeepWarmAsync(app.Services, app.Lifetime.ApplicationStopping);
 
 app.Run();
+
+
+static async Task KeepWarmAsync(IServiceProvider services, CancellationToken token)
+{
+    var voice = services.GetRequiredService<Voice>();
+    var agent = services.GetRequiredService<IAgent>();
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    while (!token.IsCancellationRequested)
+    {
+        await Task.WhenAll(
+            voice.WarmupAsync().ContinueWith(_ => logger.LogInformation("Voice warmed up"), token),
+            agent.WarmupAsync().ContinueWith(_ => logger.LogInformation("Agent warmed up"), token),
+            Task.Delay(TimeSpan.FromMinutes(5), token)
+        );
+    }
+}
