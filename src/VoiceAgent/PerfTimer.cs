@@ -16,7 +16,16 @@ public sealed class PerfTimer(ILogger _logger)
         if (_name is not null)
         {
             _stopwatch.Stop();
-            _logger.LogInformation("{Name} took {ElapsedMilliseconds}ms", _name, _stopwatch.ElapsedMilliseconds);
+            _logger.LogTrace("{Name} took {ElapsedMilliseconds}ms", _name, _stopwatch.ElapsedMilliseconds);
+            _name = null;
+        }
+    }
+    public void StopWith(string extra)
+    {
+        if (_name is not null)
+        {
+            _stopwatch.Stop();
+            _logger.LogTrace("{Name} took {ElapsedMilliseconds}ms, {Extra}", _name, _stopwatch.ElapsedMilliseconds, extra);
             _name = null;
         }
     }

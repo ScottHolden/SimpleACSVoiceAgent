@@ -35,9 +35,15 @@ public class AoaiAgentConversation(
     }
     public async Task WarmupAsync()
     {
-        await _chatClient.CompleteChatAsync(_messages, new ChatCompletionOptions
+        PerfTimer t = new(_logger);
+        t.Start("Warmup");
+        await _chatClient.CompleteChatAsync([
+            ChatMessage.CreateSystemMessage("Hello"),
+            ChatMessage.CreateUserMessage("Hello"),
+        ], new ChatCompletionOptions
         {
-            MaxOutputTokenCount = 1
+            MaxOutputTokenCount = 10
         }, CancellationToken.None);
+        t.Stop();
     }
 }

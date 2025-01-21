@@ -79,18 +79,22 @@
         recordMediaStreamSource.connect(voiceAgentNode);
         
         // Hook up to events from the websocket
+        let connected = false;
         const receiveAudio = data => {
             if (data?.Kind == "StopAudio") {
                 voiceAgentNode.port.postMessage(null);
             } else if (data?.Kind == "AudioData" && data?.AudioData?.Data) {
+                if (!connected) {
+                    connected = true;
+                    statusElement.innerText = "Connected";
+                }
                 voiceAgentNode.port.postMessage(atobInt16(data.AudioData.Data));
             }
         }
         socket = new WebSocket("/api/audio");
         socket.onmessage = e => receiveAudio(JSON.parse(e.data));
 
-        // Mark as connected
-        statusElement.innerText = "Connected";
+        statusElement.innerText = "Connecting...";
         disconnectButton.disabled = false;
     });
     connectButton.disabled = false;

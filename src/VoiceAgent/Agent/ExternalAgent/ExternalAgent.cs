@@ -14,4 +14,5 @@ public class ExternalAgentConversation : IAgentConversation
         await Task.Delay(10);
         yield return "Hello, I am an external agent";
     }
+    public Task WarmupAsync() => Task.CompletedTask;
 }

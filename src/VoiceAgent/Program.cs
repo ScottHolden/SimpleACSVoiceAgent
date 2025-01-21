@@ -70,6 +70,6 @@ app.Map("/api/events", async (HttpContext context, [FromServices]ILogger<Program
 
 // Warmup time!
 _ = app.Services.GetRequiredService<Voice>().WarmupAsync();
-_ = app.Services.GetService<AoaiAgent>()?.WarmupAsync();
+_ = app.Services.GetService<IAgent>()?.WarmupAsync();
 
 app.Run();
