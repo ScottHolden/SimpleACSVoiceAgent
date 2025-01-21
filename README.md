@@ -14,7 +14,8 @@ A small code sample showing how to run a Voice Agent
  - Run `dotnet restore` to install dependencies
  - To run the backend service, run `dotnet run --project src/VoiceAgent`, this will start the backend service on port 5191
  - To use the developer console to interact with the voice agent, run `dotnet run --project src/DevConsole`, this will start the developer console and automatically connect to the backend service
- - To use ACS to interact with the voice agent, configure ngrok to point to port 5191 using `ngrok http 5191` and update the hostname within the ACSFrontend appsettings, run `dotnet run --project src/DevConsole`, navigate to http://localhost:5058/
+ - To use ACS to interact with the voice agent, configure ngrok to point to port 5191 using `ngrok http 5191` and update the hostname within the ACSFrontend appsettings, run `dotnet run --project src/ACSFrontend`, navigate to http://localhost:5058/
+ - To use the web frontend talking directly to the VoiceAgent (not using ACS), run `dotnet run --project src/VoiceAgent`, navigate to http://localhost:5191/
 
 ## Project Explanation
 ### VoiceAgent
