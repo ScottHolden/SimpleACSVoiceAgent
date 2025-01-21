@@ -3,7 +3,8 @@ using OpenAI.Chat;
 namespace VoiceAgent;
 
 public class AoaiAgent(
-    ChatClient _chatClient
+    ChatClient _chatClient,
+    ILogger _logger
 ) : IAgent
 {
     private readonly string _defaultPrompt = """
@@ -12,7 +13,7 @@ public class AoaiAgent(
         """;
 
     public Task<IAgentConversation> StartConversationAsync()
-        => Task.FromResult((IAgentConversation)new AoaiAgentConversation(_defaultPrompt, _chatClient));
+        => Task.FromResult((IAgentConversation)new AoaiAgentConversation(_defaultPrompt, _chatClient, _logger));
 
-    public async Task WarmupAsync() => await new AoaiAgentConversation(_defaultPrompt, _chatClient).WarmupAsync();
+    public async Task WarmupAsync() => await new AoaiAgentConversation(_defaultPrompt, _chatClient, _logger).WarmupAsync();
 }
