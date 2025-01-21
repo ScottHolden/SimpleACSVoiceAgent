@@ -15,14 +15,21 @@ public class Voice(
 
     public async Task StartConversation(WebSocket ws, CancellationToken cancellationToken)
     {
+        PerfTimer t = new(_logger);
         // Set up a conversation with our agent
+        t.Start("StartConversationAsync");
         var conversation = await _agent.StartConversationAsync();
 
+
         // Set up speech defaults
+        t.StopStart("BuildSTTConfigAsync");
         var sttConfig = await BuildSTTConfigAsync(cancellationToken);
+        t.StopStart("BuildTTSConfigAsync");
         var ttsConfig = await BuildTTSConfigAsync(cancellationToken);
 
+        t.StopStart("VoiceConversationCtor");
         using var vc = new VoiceConversation(conversation, ws, ttsConfig, sttConfig, _logger);
+        t.Stop();
         await vc.RunConversationAsync(cancellationToken);
     }
 
@@ -89,8 +96,11 @@ public class Voice(
     private DateTimeOffset _authTokenExpires = DateTimeOffset.MinValue;
     private async Task<string> GetAuthTokenAsync(CancellationToken cancellationToken)
     {
+        PerfTimer t = new(_logger);
+        t.Start("GetAuthTokenAsync");
         if (_authToken != null && DateTimeOffset.Now < _authTokenExpires)
         {
+            t.StopWith("Cached");
             return _authToken;
         }
         await _authLock.WaitAsync(cancellationToken);
@@ -98,6 +108,7 @@ public class Voice(
         {
             if (_authToken != null && DateTimeOffset.Now < _authTokenExpires)
             {
+                t.StopWith("SemaphoreCached");
                 return _authToken;
             }
 
@@ -108,6 +119,7 @@ public class Voice(
 
             _authToken = $"aad#{_config.AISpeechResourceID}#{entraAuth.Token}";
             _authTokenExpires = entraAuth.ExpiresOn.AddMinutes(-5);
+            _logger.LogInformation("Got new cognitive services auth token, expires {Expires}", _authTokenExpires);
         }
         catch
         {
@@ -117,7 +129,7 @@ public class Voice(
         {
             _authLock.Release();
         }
-
+        t.StopWith("NewToken");
         return _authToken ?? throw new InvalidOperationException("Failed to get auth token");
     }
 }
