@@ -100,38 +100,12 @@ public sealed class VoiceConversation : IDisposable
         // Skip over anything blank
         if (string.IsNullOrWhiteSpace(text)) return;
 
-        // Pass the question to the agent and stream back the response
-        using var request = new SpeechSynthesisRequest(SpeechSynthesisRequestInputType.TextStream);
-        var ttsTask = await _synthesizer.StartSpeakingAsync(request);
-        await Task.WhenAll(
-            Task.Run(async () =>
-            {
-                bool isSilent = false;
-                using var audioDataStream = AudioDataStream.FromResult(ttsTask);
-                byte[] buffer = new byte[32000];
-                while (true)
-                {
-                    var count = audioDataStream.ReadData(buffer);
-                    if (count <= 0) break;
-
-                    if (!isSilent)
-                    {
-                        await SendStopAudioAsync();
-                        isSilent = true;
-                    }
-
-                    await SendAudioDataAsync(buffer[0..(int)count]);
-                }
-            }),
-            Task.Run(async () =>
-            {
-                await foreach (var part in _conversation.GetResponseStreamAsync(text, default))
-                {
-                    request.InputStream.Write(part);
-                }
-                request.InputStream.Close();
-            })
-        );
+        StringBuilder sb = new();
+        await foreach (var part in _conversation.GetResponseStreamAsync(text, default))
+        {
+            sb.Append(part);
+        }
+        await SendOneShotSpeechAsync(sb.ToString());
     }
 
     private async Task ReceiveAudioAsync(CancellationToken cancellationToken)
