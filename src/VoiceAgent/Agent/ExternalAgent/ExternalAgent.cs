@@ -3,16 +3,19 @@ using VoiceAgent;
 
 public class ExternalAgent : IAgent
 {
-    public Task<IAgentConversation> StartConversationAsync()
-        => Task.FromResult((IAgentConversation)new ExternalAgentConversation());
+    public Task<IAgentConversation> StartConversationAsync(string threadId)
+        => Task.FromResult((IAgentConversation)new ExternalAgentConversation(threadId));
 }
 
-public class ExternalAgentConversation : IAgentConversation
+public class ExternalAgentConversation(
+    string threadId
+) : IAgentConversation
 {
+    private static readonly HttpClient _client = new();
     public async IAsyncEnumerable<string> GetResponseStreamAsync(string input, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        await Task.Delay(10);
-        yield return "Hello, I am an external agent";
+        var res = await _client.PostAsync("http://localhost:3000/api/agent", new StringContent(input), cancellationToken);
+        yield return await res.Content.ReadAsStringAsync();
     }
     public Task WarmupAsync() => Task.CompletedTask;
 }

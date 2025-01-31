@@ -16,10 +16,10 @@ builder.Services.AddTransient(context
 // Internal services
 
 // Example agent using AOAI:
-builder.Services.AddSingleton<IAgent, AoaiAgent>();
+///builder.Services.AddSingleton<IAgent, AoaiAgent>();
 
 // or, Example agent that would call a backend:
-// builder.Services.AddSingleton<IAgent, ExternalAgent>();
+builder.Services.AddSingleton<IAgent, ExternalAgent>();
 
 builder.Services.AddSingleton<Voice>();
 builder.Services.AddSingleton<WebsocketHandler>();
@@ -55,8 +55,8 @@ app.UseDefaultFiles();
 app.UseStaticFiles(); // Only used for the dev web frontend
 
 // Map our websocket endpoint
-app.Map("/api/audio", async (HttpContext context, WebsocketHandler handler)
-    => await handler.Handle(context)
+app.Map("/api/audio/{treadId:string}", async (HttpContext context, WebsocketHandler handler, string threadId)
+    => await handler.Handle(threadId, context)
 );
 
 // Map a logging endpoint for optional use with ACS

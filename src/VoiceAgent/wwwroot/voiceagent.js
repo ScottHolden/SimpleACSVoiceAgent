@@ -91,7 +91,9 @@
                 voiceAgentNode.port.postMessage(atobInt16(data.AudioData.Data));
             }
         }
-        socket = new WebSocket("/api/audio");
+        // TODO: Add ThreadId
+        threadId = "abc";
+        socket = new WebSocket("/api/audio/" + threadId);
         socket.onmessage = e => receiveAudio(JSON.parse(e.data));
 
         statusElement.innerText = "Connecting...";

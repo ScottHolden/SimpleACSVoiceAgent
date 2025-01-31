@@ -8,7 +8,7 @@ public class WebsocketHandler(
     ILogger<WebsocketHandler> _logger
 )
 {
-    public async Task Handle(HttpContext context)
+    public async Task Handle(string threadId, HttpContext context)
     {
         if (context.WebSockets.IsWebSocketRequest)
         {
@@ -17,7 +17,7 @@ public class WebsocketHandler(
 
             try
             {
-                await _voice.StartConversation(webSocket, cancellationToken: context.RequestAborted);
+                await _voice.StartConversation(threadId, webSocket, cancellationToken: context.RequestAborted);
             }
             catch (TaskCanceledException)
             {
