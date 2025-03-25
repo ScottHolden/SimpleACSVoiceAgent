@@ -20,7 +20,7 @@ public class CallHandler(
     }
     public async Task MakeCallAsync(string rawId)
     {
-        var callbackEndpoint = new Uri(_config.BaseUri, "/api/events");
+        var callbackEndpoint = new Uri(_config.BaseEventsUri, "/api/log");
         var websocketEndpoint = new Uri(_config.BaseWsUri, "/api/audio");
 
         var userId = CommunicationIdentifier.FromRawId(rawId) as CommunicationUserIdentifier ?? throw new InvalidOperationException("Invalid user ID");

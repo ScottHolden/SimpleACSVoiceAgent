@@ -169,6 +169,51 @@ resource aoaiUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04
   }
 }
 
+// Event Grid
+
+resource acsSystemTopic 'Microsoft.EventGrid/systemTopics@2024-06-01-preview' = {
+  name: format(uniqueNameFormat, 'eg-acs')
+  location: 'global'
+  tags: tags
+  properties: {
+    source: acs.id
+    topicType: 'Microsoft.Communication.CommunicationServices'
+  }
+  identity: {
+    type: 'SystemAssigned'
+  }
+}
+
+resource acsSystemTopicLogs 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'allLogsToLogAnalytics'
+  scope: acsSystemTopic
+  properties: {
+    workspaceId: logAnalytics.id
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+      }
+    ]
+  }
+}
+
+resource eventGridContributorRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
+  scope: subscription()
+  // EventGrid Contributor
+  name: '1e241071-0855-49ea-94dc-649edcd759de'
+}
+
+resource eventGridContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(acsSystemTopic.id, eventGridContributorRole.id, principalId)
+  scope: acsSystemTopic
+  properties: {
+    roleDefinitionId: eventGridContributorRole.id
+    principalId: principalId
+    principalType: principalType
+  }
+}
+
 output ACSEndpoint string = acs.properties.hostName
 output AISpeechResourceID string = aiSpeech.id
 output AISpeechRegion string = aiSpeech.location

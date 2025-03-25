@@ -5,22 +5,12 @@ namespace ACSFrontend;
 public record Config(
     string? WebsocketHostname,
     Uri ACSEndpoint,
-    string? ACSKey = null
+    string? ACSKey = null,
+    string? EventGridTopicResourceID = null,
+    string? EventHostname = null
 ){
-    public Uri BaseUri => new($"https://{GetHost()}");
-    public Uri BaseWsUri => new($"wss://{GetHost()}");
-    private string GetHost() {
-        var websiteHostname = Environment.GetEnvironmentVariable("WEBSITE_DEFAULT_HOSTNAME");
-        if (!string.IsNullOrWhiteSpace(websiteHostname))
-        {
-            return websiteHostname;
-        }
-        if (!string.IsNullOrWhiteSpace(WebsocketHostname))
-        {
-            return WebsocketHostname.Replace("https://", "", StringComparison.OrdinalIgnoreCase).Replace("http://", "", StringComparison.OrdinalIgnoreCase).Trim('/');
-        }
-        throw new InvalidOperationException("Hostname not set");
-    }
+    public Uri BaseEventsUri => new($"https://{EventHostname}");
+    public Uri BaseWsUri => new($"wss://{WebsocketHostname}");
     public GlobalAudioFormat GlobalAudioFormat = GlobalAudioFormat.Pcm16KMono16Bit;
     public AudioFormat ACSAudioFormat => GlobalAudioFormat switch
     {
